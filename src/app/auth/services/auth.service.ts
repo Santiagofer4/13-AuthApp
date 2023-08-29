@@ -63,7 +63,9 @@ export class AuthService {
 
           return true
         }),
-        catchError(() => of(false))
+        catchError(() => {
+          this._authStatus.set( AuthStatus.notAuthenticated )
+          return of(false)})
       )
   }
 }
