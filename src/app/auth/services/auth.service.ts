@@ -22,6 +22,14 @@ export class AuthService {
 
   constructor() { }
 
+  private setAuthentication( user: User, token: string ):boolean {
+    this._currentUser.set( user );
+    this._authStatus.set( AuthStatus.authenticated )
+    localStorage.setItem('token', token)
+
+    return true
+  }
+
 
   login( email: string, password: string ): Observable<boolean> {
     
@@ -30,15 +38,7 @@ export class AuthService {
 
     return this.http.post<LoginResponse>( url, body )
       .pipe(
-        tap( ({ user, token }) => {
-          this._currentUser.set( user );
-          this._authStatus.set( AuthStatus.authenticated )
-          localStorage.setItem('token', token)
-
-          console.log(token)
-        }),
-        map( () => true ),
-
+        map( ({ user, token }) => this.setAuthentication( user, token)),
         catchError( err =>  throwError( () => err.error.message ))
       )
   }
@@ -56,13 +56,7 @@ export class AuthService {
 
     return this.http.get<CheckTokenResponse>(url, { headers })
       .pipe(
-        map(( {token, user} ) => {
-          this._currentUser.set( user );
-          this._authStatus.set( AuthStatus.authenticated )
-          localStorage.setItem('token', token)
-
-          return true
-        }),
+        map( ({ user, token }) => this.setAuthentication( user, token)),
         catchError(() => {
           this._authStatus.set( AuthStatus.notAuthenticated )
           return of(false)})
